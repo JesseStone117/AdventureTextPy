@@ -12,6 +12,7 @@ from enemy import encounter
 import random
 import items
 import player
+import dungeons
 import npc
 import enemy
 
@@ -71,69 +72,6 @@ TheDeep = {
 
 Areas = [Town, ThePlains, TheWilderness, TheMarsh, Blighteth, TheDeep]
 
-def displayAreaOptions(currentArea):
-    clear()
-    selected = 0
-    spacing = 16
-    numOptions = 0
-    initialLocation = currentArea["name"]
-    
-    print("\n\n\n {" + currentArea["name"] + "}", end="")
-    
-    player.displayPlayerInfo()
-    
-    if player.TheGameInfo.greeting == True:
-        print("\n  What would you like to do, traveler?", end="")
-        player.TheGameInfo.greeting = False
-        # spacing = 17
-    else:
-        print("\n", end="")
-        print("",end="")
-    
-    print("\n" * spacing)
-    
-    if currentArea["option1"] != "":
-        print("  [1] " + currentArea["option1"], end="")
-        numOptions += 1
-    
-    if currentArea["option2"] != "":
-        print(" | [2] " + currentArea["option2"], end="")
-        numOptions += 1
-    
-    if currentArea["option3"] != "":
-        print(" | [3] " + currentArea["option3"], end="")
-        numOptions += 1
-        
-    if currentArea["option4"] != "":
-        print(" | [4] " + currentArea["option4"], end="")
-        numOptions += 1
-        
-    print ("\n    [O]pen inventory | [P]layer Status | [E]xit Game", end="")
-    
-    selected = input("\n\n    I want to: ").lower()
-    
-    if player.playerOptions(selected) == False:
-        try:
-            selected = int(selected)
-        except:
-            selected = 0
-        
-        if selected > numOptions or selected < 1:
-            input("  Invalid selection...")
-            selected = 0
-        
-        if selected > 0 and selected <= numOptions:
-            currentArea = locationOptions(selected, currentArea)
-            areaEnemyType = currentArea["enemies"][0]
-            player.TheHero["location"] = currentArea["name"]
-            
-        if initialLocation != currentArea["name"]:
-            travel(areaEnemyType)
-            
-    saveInfo()
-    return currentArea
-    clear()
-
 def locationOptions(selected, currentArea):
     if currentArea["name"] == "Town":
         return townOptions(selected)
@@ -161,10 +99,6 @@ def townOptions(selected):
     if selected == 2:
         clear()
         input ("\n" *3 + "  Welcome to the tavern")
-        # player.acquireItem(items.smallLoafOfBread)
-        # player.acquireItem(items.mediumHealthPotion)
-        # player.acquireItem(items.smallHealthPotion)
-        # player.acquireItem(items.largeHealthPotion)
         
         return Town
     
@@ -210,6 +144,7 @@ def marshOptions(selected):
         return Blighteth
     
     if selected == 3:
+        dungeons.enterCaveOfDark()
         return TheMarsh
     
     if selected == 4:
@@ -244,6 +179,70 @@ def deepOptions(selected):
     
     if selected == 4:
         return TheDeep
+
+def displayAreaOptions(currentArea):
+    clear()
+    selected = 0
+    spacing = 16
+    numOptions = 0
+    initialLocation = currentArea["name"]
+    
+    print("\n\n\n {" + currentArea["name"] + "}", end="")
+    
+    player.displayPlayerInfo()
+    
+    if player.TheGameInfo.greeting == True:
+        print("\n  What would you like to do, traveler?", end="")
+        player.TheGameInfo.greeting = False
+        # spacing = 17
+    else:
+        print("\n", end="")
+        print("",end="")
+    
+    print("\n" * spacing)
+    
+    if currentArea["option1"] != "":
+        print("  [1] " + currentArea["option1"], end="")
+        numOptions += 1
+    
+    if currentArea["option2"] != "":
+        print(" | [2] " + currentArea["option2"], end="")
+        numOptions += 1
+    
+    if currentArea["option3"] != "":
+        print(" | [3] " + currentArea["option3"], end="")
+        numOptions += 1
+        
+    if currentArea["option4"] != "":
+        print(" | [4] " + currentArea["option4"], end="")
+        numOptions += 1
+        
+    # print ("\n    [O]pen inventory | [P]layer Status | [E]xit Game", end="")
+    
+    # selected = input("\n\n    I want to: ").lower()
+    selected = player.playerOptions()
+    
+    if selected != True:
+        try:
+            selected = int(selected)
+        except:
+            selected = 0
+        
+        if selected > numOptions or selected < 1:
+            input("  Invalid selection...")
+            selected = 0
+        
+        if selected > 0 and selected <= numOptions:
+            currentArea = locationOptions(selected, currentArea)
+            areaEnemyType = currentArea["enemies"][0]
+            player.TheHero["location"] = currentArea["name"]
+            
+        if initialLocation != currentArea["name"]:
+            travel(areaEnemyType)
+            
+    saveInfo()
+    return currentArea
+    clear()
     
 def travel(enemy):
     clear()

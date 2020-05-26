@@ -15,7 +15,7 @@ TheShopkeep = {
     "healthCur": 20,
     "strength": 2,
     "weapon": ["claws", 1],
-    "wares": [items.smallHealthPotion, items.smallLoafOfBread],# items.mediumHealthPotion, items.freshCherryPie],
+    "wares": [items.smallHealthPotion, items.smallLoafOfBread, items.mediumHealthPotion, items.freshCherryPie],
     "speed": 1,
     "loot": ["gold", 9]
 }
@@ -76,7 +76,7 @@ def talkToTheShopkeep():
             dialogue(heroTalking, "What can you tell me about the shadow man?")
             
             dialogue(
-                shopkeepTalking, "Ah, a real cook that one. Claims he used to live among The Derelict.\n",
+                shopkeepTalking, "Ah, a real kook that one. Claims he used to live among the Derelict.\n",
                 "I wouldn't trust anything he has to say."
             )
                 
@@ -99,28 +99,31 @@ def displayShopkeepSelection():
     shopping = True
     goodSelect = False
     output = "\n"
-    cellLength = 30
-    tableCentering = 40
+    cellLength = 41
+    tableCentering = 30
+    
+    cellComponent1 = " "*tableCentering + "-"*cellLength + "\n" + " "*tableCentering + "|  " 
     
     print()
     
     for objects in TheShopkeep["wares"]:
         print(
-            " "*tableCentering + "-"*cellLength + "\n" + " "*tableCentering +
-            "|  " + objects["name"] + " "*(26-len(objects["name"])) + "|  " + str(objects["cost"]) + " gold"
+            cellComponent1 + objects["name"] + " "*(22-len(objects["name"])) + "|  " + "[" + str(objects["cost"])+
+            " gold]" + " "*(5-len(str(objects["cost"]))) + "|  " + "(restores " + str(objects["effect"][1]) + " " +
+            str(objects["effect"][0]) + ") "
             )
         
-    print(" "*tableCentering + "-"*30 + "\n")
+    print(" "*tableCentering + "-"*cellLength + "\n")
     
     for idx, item in enumerate(TheShopkeep["wares"]):
         if idx == 0:
-            output += "  [" + str(idx+1) + "] Purchase"
+            output += "  [" + str(idx+1) + "] Purchase "
             
         elif idx == 3:
-            output += " [" + str(idx+1) + "] Purchase"
+            output += " [" + str(idx+1) + "] Purchase "
             
         else:
-            output += " | [" + str(idx+1) + "] Purchase"
+            output += " | [" + str(idx+1) + "] Purchase "
             
         output += TheShopkeep["wares"][idx]["name"]
         

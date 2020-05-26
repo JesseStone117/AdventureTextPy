@@ -8,6 +8,7 @@ Created on Fri May  8 02:25:39 2020
 import tools
 import locations
 import equipment
+import items
 
 class GameInfo:
     def __init__(self, greeting):
@@ -40,7 +41,7 @@ TheHero = {
     "healthCur": 10,
     "staminaCap": 8,
     "staminaCur": 8,
-    "armor": 1,
+    "armor": 6,
     "strength": 3,
     "weapon": equipment.Fists,
     "speed": 3,
@@ -91,7 +92,8 @@ def displayPlayerInventory():
         for key, value in TheHero["inventory"].items():
             print("  " + key + ": ",end="")
             if value["name"] != "null":
-                print(value["name"] + " " + str(value["count"]) + "\n")
+                print(value["name"] + " " + str(value["count"]) + " (restores " +
+                str(value["effect"][1]), str(value["effect"][0]) + ")" + "\n")
                 optionsString += "[" + str(count) + "] Use " + value["name"] + " | "
             else:
                 print("\n")
@@ -128,6 +130,20 @@ def displayGold():
     goldLength = len(currentGold)
     print("\n"+" "*(117-goldLength)+"Gold: "+str(TheHero["gold"]),end="")
 
+def searchChest(size):
+    offset = " "*44
+    
+    if size == "small":
+        gold = 47
+        tools.clear()
+        print("\n"*11)
+        input(offset + "1 " + items.largeHealthPotion["name"] + " acquired\n")
+        input(offset + "1 " + items.smallLoafOfBread["name"] + " acquired\n")
+        input(offset + str(gold) + " gold " + "acquired\n")
+        acquireItem(items.largeHealthPotion)
+        acquireItem(items.smallLoafOfBread)
+        TheHero["gold"] += gold
+
 def acquireLoot(enemy):
     currentGold = TheHero["gold"] 
     currentGold += enemy["loot"][1]
@@ -161,14 +177,16 @@ def purchaseItem(newItem):
         input("  Insufficient funds...")
 
 def useItem(item):
-    if "restoreHealth" in item["effect"]:
+    effect = 0
+    if "health" in item["effect"][effect]:
         usePotion(item)
         
-    if "restoreStamina" in item["effect"]:
+    if "stamina" in item["effect"][effect]:
         useFood(item)
 
 def useFood(food):
-    replenishedStamina = food["effect"]["restoreStamina"]
+    staminaValue = 1
+    replenishedStamina = food["effect"][staminaValue]
     
     if TheHero["staminaCur"] != TheHero["staminaCap"]:
         if replenishedStamina + TheHero["staminaCur"] >= TheHero["staminaCap"]:
@@ -190,7 +208,8 @@ def useFood(food):
         input("  Stamina already full...")
 
 def usePotion(potion):
-    replenishedHealth = potion["effect"]["restoreHealth"]
+    healthValue = 1
+    replenishedHealth = potion["effect"][healthValue]
     
     if TheHero["healthCur"] != TheHero["healthCap"]:
         if replenishedHealth + TheHero["healthCur"] >= TheHero["healthCap"]:
@@ -211,13 +230,6 @@ def usePotion(potion):
     else:
         input("  Health already full...")
 
-def damagePlayer(enemy):
-    enemyDamage = enemy["weapon"]["damage"]+enemy["strength"]
-    currentHealth = TheHero["healthCur"] 
-    currentHealth -= (enemyDamage-TheHero["armor"])
-    TheHero["healthCur"] = currentHealth
-    tools.saveInfo()
-
 def deathProcess():
     tools.clear()
     input("\n"*13 + " "*55 + "You died...")
@@ -233,7 +245,11 @@ def deathProcess():
     tools.saveInfo()
     return locations.ThePlains
 
-def playerOptions(selected):
+def playerOptions():
+    print("\n    [O]pen inventory | [P]layer Status | [E]xit Game", end="")
+    
+    selected = input("\n\n    I want to: ").lower()
+    
     if selected == "e":
         exit()
     elif selected == "o":
@@ -241,7 +257,8 @@ def playerOptions(selected):
     elif selected == "p":
         input("status")
     else:
-        return False
+        return selected
+    tools.clear()
     return True
 
 TheGameInfo = GameInfo(True)
