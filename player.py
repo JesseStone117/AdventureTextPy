@@ -9,29 +9,20 @@ import tools
 import locations
 import equipment
 import items
+import dungeons
 
-class GameInfo:
-    def __init__(self, greeting):
-        self.greeting = greeting
 
-class Character:
-    def selection(self, selected):
-        True
-        
-    def option1(self, selected):
-        if selected == 1:
-            print("OK")
-
-class Player:
-    def __init__(self, name, health):
-        self.name = name
-        self.health = health
-        
 PlayerInventory = {
-    "item1": {"name": "null", "weight": "null", "effect": "null", "count": "null"},
-    "item2": {"name": "null", "weight": "null", "effect": "null", "count": "null"},
-    "item3": {"name": "null", "weight": "null", "effect": "null", "count": "null"},
-    "item4": {"name": "null", "weight": "null", "effect": "null", "count": "null"}
+    "items": [],
+    "count": [],
+    "gold": 0,
+}
+
+LostItems = {
+    "items": [],
+    "count": [],
+    "gold": 0,
+    "position": {"area": None, "location": None, "subLocation": None}
 }
 
 TheHero = {
@@ -46,221 +37,399 @@ TheHero = {
     "weapon": equipment.Fists,
     "speed": 3,
     "intelligence": 4,
-    "inventoryCap": 4,
     "carryCap": 10,
     "inventory": PlayerInventory,
-    "gold": 0,
-    "location": "The Plains"
+    "statusEffect": None,
+    "position": None,
+    "lostItems": LostItems
 }
 
+
 def displayPlayerStamina():
-    healthBar = ""
     missingStamina = TheHero["staminaCap"] - TheHero["staminaCur"]
     remainingStamina = TheHero["staminaCap"] - missingStamina
-    
+
+    # name = TheHero["name"][0].upper()
+    # name += TheHero["name"][1:]
+
+    # print(missingStamina)
+
+    filledSegment = "██" * int(remainingStamina)
+    emptySegment = "░░" * int(missingStamina)
+    healthBar = emptySegment + filledSegment
+
+    print("\n" + " " * (113 - (TheHero["staminaCap"] * 2)) + " Stamina: ", end="")
+
+    print(healthBar, end="")
+
+
+def displayNameAndStatusEffect(nameOnly=False, statusOnly=False):
     name = TheHero["name"][0].upper()
     name += TheHero["name"][1:]
-    
-    # print(missingStamina)
-    
-    filledSegment = "██"*int(remainingStamina)
-    emptySegment = "░░"*int(missingStamina)
-    healthBar = emptySegment + filledSegment
-    
-    print("\n" + " "*(127-len(name)-(TheHero["healthCap"]*3)) + name + " Stamina: ", end="")
-    
-    print(healthBar,end="")
+
+    if TheHero["statusEffect"]:
+        statusEffect = TheHero["statusEffect"]["name"][0].upper()
+        statusEffect += TheHero["statusEffect"]["name"][1:]
+    else:
+        nameOnly = True
+
+    if nameOnly:
+        tools.printIndent("["+name+"]", 121 - len(name), numNewLinesAfter=0)
+
+    elif statusOnly:
+        if TheHero["statusEffect"]:
+            tools.printIndent("~" + statusEffect + "~", 120 - len(TheHero["statusEffect"]["name"]), numNewLinesAfter=0)
+
+    else:
+        tools.printIndent("~" + statusEffect + "~ " + "["+name+"]", 118 - len(name) - len(TheHero["statusEffect"]["name"]), numNewLinesAfter=0)
+
+    return name
+
 
 def displayPlayerInfo():
-    tools.displayHealth(TheHero)
+    displayNameAndStatusEffect()
+    tools.displayHealth(TheHero, isPlayer=True)
     displayPlayerStamina()
     displayGold()
-    
+
+
 def displayPlayerInventory():
     inventory = True
     optionsString = "  "
-    count = 1
-    
+    spacing = 15
+    # item = 0
+    # count = 1
+
     while inventory:
         tools.clear()
-        
-        print("\n"*3,end="")
-        
+
+        print("\n" * 4, end="")
+
         displayPlayerInfo()
-        print()
-        
-        for key, value in TheHero["inventory"].items():
-            print("  " + key + ": ",end="")
-            if value["name"] != "null":
-                print(value["name"] + " " + str(value["count"]) + " (restores " +
-                str(value["effect"][1]), str(value["effect"][0]) + ")" + "\n")
-                optionsString += "[" + str(count) + "] Use " + value["name"] + " | "
-            else:
-                print("\n")
-            count += 1
-            
-        optionsString += "[E]xit inventory\n    I want to: "
-        
-        print()
-        
+
+        print("\n" * 2, end="")
+
+        for idx, item in enumerate(TheHero["inventory"]["items"]):
+            print("  item " + str(idx + 1) + ": ", end="")
+            print("(×" + str(TheHero["inventory"]["count"][idx]) + ") " + item["name"] + " " + items.getItemUsage(item))
+            if idx == 3:
+                optionsString += "\n    "
+                spacing -= 1
+            optionsString += "[" + str(idx + 1) + "] Use " + item["name"] + " | "
+
+        optionsString += "[E]xit inventory\n\n    I want to: "
+
+        print("\n" * (spacing - len(TheHero["inventory"]["items"])))
+
         selected = input(optionsString).lower()
-        
-        if selected == "1" and TheHero["inventory"]["item1"]["name"] != "null":
-            useItem(TheHero["inventory"]["item1"])
-            
-        elif selected == "2" and TheHero["inventory"]["item2"]["name"] != "null":
-            useItem(TheHero["inventory"]["item2"])
-            
-        elif selected == "3" and TheHero["inventory"]["item3"]["name"] != "null":
-            useItem(TheHero["inventory"]["item3"])
-        
-        elif selected == "4" and TheHero["inventory"]["item4"]["name"] != "null":
-            useItem(TheHero["inventory"]["item4"])
-            
-        elif selected == "e":
+
+        for idx, item in enumerate(TheHero["inventory"]["items"]):
+            if selected == str(idx + 1):
+                eval(item["use"])
+                # useItem(TheHero["inventory"]["items"][idx])
+                selected = "p"
+
+        if selected == "e":
             inventory = False
+        elif selected == "p":
+            pass
         else:
             input("  Invalid selection...")
-        
+
         optionsString = "  "
-        count = 1
+
+        spacing = 15
+
 
 def displayGold():
-    currentGold = str(TheHero["gold"])
+    currentGold = str(TheHero["inventory"]["gold"])
     goldLength = len(currentGold)
-    print("\n"+" "*(117-goldLength)+"Gold: "+str(TheHero["gold"]),end="")
+    print("\n" + " " * (117 - goldLength) + "Gold: " + str(TheHero["inventory"]["gold"]), end="")
 
-def searchChest(size):
-    offset = " "*44
-    
+
+def plunderChest(size):
+    offset = 44
+
     if size == "small":
         gold = 47
         tools.clear()
-        print("\n"*11)
-        input(offset + "1 " + items.largeHealthPotion["name"] + " acquired\n")
-        input(offset + "1 " + items.smallLoafOfBread["name"] + " acquired\n")
-        input(offset + str(gold) + " gold " + "acquired\n")
+        tools.inputIndent("1 " + items.largeHealthPotion["name"] + " acquired\n", offset, 11)
+        tools.inputIndent("1 " + items.smallLoafOfBread["name"] + " acquired\n", offset)
+        tools.inputIndent(str(gold) + " gold " + "acquired\n", offset)
         acquireItem(items.largeHealthPotion)
         acquireItem(items.smallLoafOfBread)
-        TheHero["gold"] += gold
+        TheHero["inventory"]["gold"] += gold
+
+    elif size == "medium":
+        gold = 256
+        uhpCount = 1
+        fcpCount = 2
+        slbCount = 4
+        tools.clear()
+        tools.inputIndent(str(uhpCount) + " " + items.ultraHealthPotion["name"] + "s acquired\n", offset, 11)
+        tools.inputIndent(str(fcpCount) + " " + items.freshCherryPie["name"] + "s acquired\n", offset)
+        tools.inputIndent(str(slbCount) + " " + items.smallLoafOfBread["name"] + " acquired\n", offset)
+        tools.inputIndent(str(gold) + " gold " + "acquired\n", offset)
+        acquireItem(items.ultraHealthPotion, uhpCount)
+        acquireItem(items.freshCherryPie, fcpCount)
+        acquireItem(items.smallLoafOfBread, slbCount)
+        TheHero["inventory"]["gold"] += gold
+
+    elif size == "large":
+        gold = 999
+        uhpCount = 4
+        fcpCount = 5
+        tools.clear()
+        tools.inputIndent(str(uhpCount) + " " + items.ultraHealthPotion["name"] + "s acquired\n", offset, 11)
+        tools.inputIndent(str(fcpCount) + " " + items.freshCherryPie["name"] + "s acquired\n", offset)
+        tools.inputIndent("1 " + items.potionOfAscendance["name"] + " acquired\n", offset)
+        tools.inputIndent(str(gold) + " gold " + "acquired\n", offset)
+        acquireItem(items.ultraHealthPotion, uhpCount)
+        acquireItem(items.freshCherryPie, fcpCount)
+        acquireItem(items.potionOfAscendance)
+        TheHero["inventory"]["gold"] += gold
+
+    elif size == "ascendant":
+        input(offset + "1 " + items.potionOfAscendance["name"] + " acquired\n")
+        acquireItem(items.potionOfAscendance)
+
 
 def acquireLoot(enemy):
-    currentGold = TheHero["gold"] 
+    currentGold = TheHero["inventory"]["gold"]
     currentGold += enemy["loot"][1]
-    TheHero["gold"] = currentGold
+    TheHero["inventory"]["gold"] = currentGold
 
-def acquireItem(newItem):
+
+def acquireItem(newItem, count = 1):
     acquired = False
-    for key, value in TheHero["inventory"].items():
-        if value["name"] == newItem["name"]:
-            value["count"] += 1
+
+    for idx, item in enumerate(TheHero["inventory"]["items"]):
+        if item["name"] == newItem["name"]:
+            TheHero["inventory"]["count"][idx] += count
             acquired = True
-            tools.saveInfo()
             break
-            
-    if acquired == False:
-        for key, value in TheHero["inventory"].items():
-            if value["name"] == "null":
-                value["name"] = newItem["name"]
-                value["weight"] = newItem["weight"]
-                value["effect"] = newItem["effect"]
-                value["count"] = 1
-                tools.saveInfo()
-                break
+
+    if not acquired:
+        TheHero["inventory"]["items"].append(newItem)
+        TheHero["inventory"]["count"].append(1)
+
+
+def expoundAcquiredItem(newItem, spacing):
+    input(spacing + "Acquired 1 " + newItem["name"])
+    acquireItem(newItem)
+
 
 def purchaseItem(newItem):
-    if TheHero["gold"] >= newItem["cost"]:
-        TheHero["gold"] -= newItem["cost"]
+    if TheHero["inventory"]["gold"] >= newItem["cost"]:
+        TheHero["inventory"]["gold"] -= newItem["cost"]
         acquireItem(newItem)
         input("      Purchased 1 " + newItem["name"])
     else:
         input("  Insufficient funds...")
 
+
+def displayMap(*display):
+
+    if TheHero["position"]["location"] == "dungeons.SunkenCitadel":
+        if tools.searchList(items.sunkenCitadelMap, TheHero["inventory"]["items"]):
+            if display:
+                dungeons.displaySunkenCitadelMap()
+
+            return True
+
+    elif TheHero["position"]["location"] == "dungeons.CaveOfDark":
+        if tools.searchList(items.sunkenCitadelMap, TheHero["inventory"]["items"]):
+            if display:
+                dungeons.displayCaveOfDarkMap()
+
+            return True
+
+    return False
+
 def useItem(item):
     effect = 0
-    if "health" in item["effect"][effect]:
+
+    if item["effect"][effect] == "health":
         usePotion(item)
-        
-    if "stamina" in item["effect"][effect]:
+
+    elif item["effect"][effect] == "stamina":
         useFood(item)
+
+    elif item["effect"][effect] == "ascend":
+        ascend(item)
+
+    elif item["effect"][effect] == "map":
+        eval(item["effect"]["use"])
+
+    tools.saveInfo()
+
 
 def useFood(food):
     staminaValue = 1
     replenishedStamina = food["effect"][staminaValue]
-    
+
     if TheHero["staminaCur"] != TheHero["staminaCap"]:
-        if replenishedStamina + TheHero["staminaCur"] >= TheHero["staminaCap"]:
-            TheHero["staminaCur"] = TheHero["staminaCap"]
-            replenishedStamina = "to full"
-        else:
-            TheHero["staminaCur"] += replenishedStamina
-            
-        for key, value in TheHero["inventory"].items():
-                if value["name"] == food["name"] and value["name"] != "null":
-                    value["count"] -= 1
-                    input("Restored " + str(replenishedStamina) + " stamina")
-                    # TheHero["healthCur"] += 
-                    if value["count"] < 1:
-                        value["name"] = "null"
-                    tools.saveInfo()
-                    break
+        if removeItem(food):
+            if replenishedStamina + TheHero["staminaCur"] >= TheHero["staminaCap"]:
+                TheHero["staminaCur"] = TheHero["staminaCap"]
+                replenishedStamina = "to full"
+            else:
+                TheHero["staminaCur"] += replenishedStamina
+
+        input("Restored " + str(replenishedStamina) + " stamina")
+
     else:
         input("  Stamina already full...")
+
 
 def usePotion(potion):
     healthValue = 1
     replenishedHealth = potion["effect"][healthValue]
-    
+
     if TheHero["healthCur"] != TheHero["healthCap"]:
-        if replenishedHealth + TheHero["healthCur"] >= TheHero["healthCap"]:
-            TheHero["healthCur"] = TheHero["healthCap"]
-            replenishedHealth = "to full"
-        else:
-            TheHero["healthCur"] += replenishedHealth
-        
-        for key, value in TheHero["inventory"].items():
-            if value["name"] == potion["name"] and value["name"] != "null":
-                value["count"] -= 1
-                input("Restored " + str(replenishedHealth) + " health")
-                # TheHero["healthCur"] += 
-                if value["count"] < 1:
-                    value["name"] = "null"
-                tools.saveInfo()
-                break
+        if removeItem(potion):
+            if replenishedHealth + TheHero["healthCur"] >= TheHero["healthCap"]:
+                TheHero["healthCur"] = TheHero["healthCap"]
+                replenishedHealth = "to full"
+            else:
+                TheHero["healthCur"] += replenishedHealth
+
+        input("Restored " + str(replenishedHealth) + " health")
+
     else:
         input("  Health already full...")
 
+
+def ascend(potion):
+    tools.clear()
+    tools.printIndent("Consume this potion of ascendance in order to permanently increase one of your attributes", 16, 8)
+    tools.printIndent("[1] Increase maximum health | [2] Increase maximum stamina | [3] Increase strength", 18, 1)
+    selected = tools.inputIndent("I want to: ",4,16)
+
+    if selected == "1":
+        if removeItem(potion):
+            TheHero["healthCap"] += 2
+            input("Maximum health increased")
+
+    elif selected == "2":
+        if removeItem(potion):
+            TheHero["staminaCap"] += 2
+            input("Maximum stamina increased")
+
+    elif selected == "3":
+        if removeItem(potion):
+            TheHero["strength"] += 4
+            input("Maximum strength increased")
+
+
+def removeItem(theItem):
+    for idx, item in enumerate(TheHero["inventory"]["items"]):
+        if item["name"] == theItem["name"]:
+            TheHero["inventory"]["count"][idx] -= 1
+            if TheHero["inventory"]["count"][idx] < 1:
+                TheHero["inventory"]["items"].pop(idx)
+                TheHero["inventory"]["count"].pop(idx)
+
+            tools.saveInfo()
+            return True
+
+
+def storeLostItems():
+    TheHero["lostItems"]["position"] = TheHero["position"]
+    TheHero["lostItems"]["gold"] = TheHero["inventory"]["gold"]
+    TheHero["lostItems"]["items"] = TheHero["inventory"]["items"]
+    TheHero["lostItems"]["count"] = TheHero["inventory"]["count"]
+
+
+def reclaimLostItems():
+    if TheHero["lostItems"]["gold"] > 0 or TheHero["lostItems"]["items"] != []:
+        tools.clear()
+        print("\n" * 20 + " " * 40, end="")
+        input("You have run into your lost items")
+
+        tools.clear()
+
+        TheHero["inventory"]["gold"] += TheHero["lostItems"]["gold"]
+
+        for idx, x in enumerate(TheHero["lostItems"]["items"]):
+            for y in range(TheHero["lostItems"]["count"][idx]):
+                acquireItem(x)
+                # input(x)
+
+        clearLostItems()
+
+
+def clearLostItems():
+    TheHero["lostItems"] = {
+        "items": [],
+        "count": [],
+        "gold": 0,
+        "position": {"area": None, "location": None, "subLocation": None}
+    }
+
+    tools.saveInfo()
+
+
 def deathProcess():
     tools.clear()
-    input("\n"*13 + " "*55 + "You died...")
-    TheHero["healthCur"] = 10
-    TheHero["healthCap"] = 10
-    TheHero["staminaCur"] = 8
-    TheHero["staminaCap"] = 8
-    TheHero["gold"] = 0
-    TheHero["location"] = locations.ThePlains["name"]
-    
-    for key, value in TheHero["inventory"].items():
-        value["name"] = "null"
+    storeLostItems()
+
+    input("\n" * 13 + " " * 55 + "You died...")
+
+    # Reset player values
+    TheHero["healthCur"] = TheHero["healthCap"]
+    TheHero["staminaCur"] = TheHero["staminaCap"]
+    TheHero["inventory"]["gold"] = 0
+    TheHero["statusEffect"] = None
+    TheHero["inventory"]["items"] = []
+    TheHero["inventory"]["count"] = []
+    TheHero["position"] = {"area": "ThePlains", "location": "Central", "subLocation": None}
+
     tools.saveInfo()
-    return locations.ThePlains
 
-def playerOptions():
-    print("\n    [O]pen inventory | [P]layer Status | [E]xit Game", end="")
-    
-    selected = input("\n\n    I want to: ").lower()
-    
-    if selected == "e":
-        exit()
-    elif selected == "o":
-        displayPlayerInventory()
-    elif selected == "p":
-        input("status")
+
+def playerOptions(optionsList):
+
+    if TheHero["position"]["subLocation"] is None:
+        print("\n    [O]pen inventory | [V]iew player status | [R]eturn to Main Menu | [E]xit Game", end="")
     else:
-        return selected
+        print("\n    [O]pen inventory | [V]iew player status", end="")
+
+        if displayMap():
+            print(" | [E]xamine map", end="")
+
+    selected = input("\n\n    I want to: ").lower()
+
+    for x in range(len(optionsList)):
+        if tools.searchList(selected, optionsList):
+            return selected
+
+    if len(selected) == 1:
+        if selected == "e":
+            if TheHero["position"]["subLocation"] is None:
+                tools.saveInfo()
+                exit()
+            elif displayMap(True):
+                return False
+            else:
+                tools.inputIndent("Invalid selection...")
+
+        elif selected == "o":
+            displayPlayerInventory()
+
+        elif selected == "v":
+            tools.inputIndent("status", 6)
+
+        elif selected == "r":
+            if TheHero["position"]["subLocation"] is None:
+                return "main"
+            else:
+                return "bad"
+        else:
+            tools.inputIndent("Invalid selection...")
+            return False
+    else:
+        return tools.speakSecretPhrase(selected)
+
     tools.clear()
-    return True
-
-TheGameInfo = GameInfo(True)
-
 
