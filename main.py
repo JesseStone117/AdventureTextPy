@@ -6,23 +6,33 @@ Created on Tue Apr 21 19:36:03 2020
 """
 
 import locations
-import random
-import time
 import tools
 import player
+import random
+import time
+import items
+
+# def restart():
+#     os.execv(sys.executable, ['main'] + sys.argv)
 
 def main():
-    random.seed(time.time)
-    tools.clear()
-    location = tools.loadInfo()
-    
-    input("\n\n\n Welcome back traveler. Press enter to resume your adventure...")
-    tools.clear()
-    
-    while True:
-        location = locations.displayAreaOptions(location)
-        if player.TheHero["healthCur"] < 1:
-            location = player.deathProcess()
-            
+    random.seed(str(time.time))
+    inMenu = True
+
+    # player.acquireItem(items.sunkenCitadelMap)
+    # player.acquireItem(items.caveOfDarkMap)
+    # player.acquireItem(items.potionOfAscendance)
+
+    while inMenu:
+        inMenu = tools.displayMainMenu()
+
+        inGame = True
+
+        while inGame:
+            inGame = locations.processAreaOptions()
+            if player.TheHero["healthCur"] < 1:
+                player.deathProcess()
+
+
 if __name__ == "__main__":
     main()

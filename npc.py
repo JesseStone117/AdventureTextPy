@@ -10,262 +10,293 @@ import player
 import items
 
 TheShopkeep = {
-    "name": "Burrel",
+    "name": "The Shopkeep",
     "healthCap": 20,
     "healthCur": 20,
     "strength": 2,
     "weapon": ["claws", 1],
-    "wares": [items.smallHealthPotion, items.smallLoafOfBread, items.mediumHealthPotion, items.freshCherryPie],
+    "wares": [items.smallHealthPotion, items.smallLoafOfBread, items.mediumHealthPotion, items.freshCherryPie, items.potionOfAscendance],
     "speed": 1,
-    "loot": ["gold", 9]
+    "loot": ["gold", 9],
+    "approach": "npc.talkToTheShopkeep()"
 }
 
 TheShadowMan = {
-    "name": "Shadow Man",
+    "name": "The Shadow Man",
     "healthCap": 30,
     "healthCur": 30,
     "strength": 2,
     "weapon": ["claws", 1],
     "speed": 1,
-    "loot": ["gold", 9]
+    "loot": ["gold", 9],
+    "gift": True,
+    "approach": "npc.talkToTheShadowMan()"
+}
+
+Shaymus = {
+    "name": "Shaymus",
+    "approach": "npc.talkToShaymus()",
+    "gift": True
 }
 
 def talkToTheShopkeep():
-    selected = 0
-    status = []
     conversing = True
     shopping = False
-    heroTalking = "\n  " + player.TheHero["name"] + ": " 
+    heroTalking = "\n  " + player.TheHero["name"] + ": "
     shopkeepTalking = "\n  " + TheShopkeep["name"] + ": "
     tools.clear()
-    
-    selected = input("\n" *3 + shopkeepTalking + "Hello, could I interest you in some wares?").lower()
-    
+
+    print("\n" * 3 + shopkeepTalking + "Hello, could I interest you in some wares?")
+
     while conversing:
         if shopping == False:
             selected = input(
-                "\n  [1] Browse the shopkeep's wares"+
-                " | [2] Ask about the shadow man"+
+                "\n  [1] Browse the shopkeep's wares" +
+                " | [2] Ask about the shadow man" +
                 " | [E]nd conversation\n    Say: "
             ).lower()
         else:
             print(
-                "\n  [1] Browse the shopkeep's wares"+
-                " | [2] Ask about the shadow man"+
+                "\n  [1] Browse the shopkeep's wares" +
+                " | [2] Ask about the shadow man" +
                 " | [E]nd conversation\n    Say: " + selected
             )
             selected = "1"
-        
+
         if selected == "1":
             player.displayGold()
             status = displayShopkeepSelection()
-            
+
             if status[0] == True:
                 shopping = True
             else:
                 shopping = False
                 selected = "e"
-                
+
             if status[1] == True:
                 conversing = True
             else:
                 conversing = False
                 selected = "e"
-                
+
         elif selected == "2":
             dialogue(heroTalking, "What can you tell me about the shadow man?")
-            
+
             dialogue(
                 shopkeepTalking, "Ah, a real kook that one. Claims he used to live among the Derelict.\n",
                 "I wouldn't trust anything he has to say."
             )
-                
+
         elif selected == "e":
             conversing = False
-            
+
             dialogue(heroTalking, "Farewell.")
-            
+
             dialogue(shopkeepTalking, "Comeback soon!")
 
         else:
             input("  Invalid selection...")
-            
+
         tools.clear()
-        print("\n" *3 + shopkeepTalking + "Hello, could I interest you in some wares?")
+        print("\n" * 3 + shopkeepTalking + "Hello, could I interest you in some wares?")
 
 def displayShopkeepSelection():
     # tools.clear()
     conversing = True
     shopping = True
     goodSelect = False
-    output = "\n"
-    cellLength = 41
+    output = "\n\n"
+    cellLength = 45
     tableCentering = 30
-    
-    cellComponent1 = " "*tableCentering + "-"*cellLength + "\n" + " "*tableCentering + "|  " 
-    
+
+    cellComponent1 = " "*tableCentering + "-"*cellLength + "\n" + " "*tableCentering + "|  "
+
     print()
-    
-    for objects in TheShopkeep["wares"]:
+
+    for idx, objects in enumerate(TheShopkeep["wares"]):
         print(
-            cellComponent1 + objects["name"] + " "*(22-len(objects["name"])) + "|  " + "[" + str(objects["cost"])+
-            " gold]" + " "*(5-len(str(objects["cost"]))) + "|  " + "(restores " + str(objects["effect"][1]) + " " +
-            str(objects["effect"][0]) + ") "
-            )
-        
-    print(" "*tableCentering + "-"*cellLength + "\n")
-    
-    for idx, item in enumerate(TheShopkeep["wares"]):
+            cellComponent1 + "[" + str(idx+1) + "] " + objects["name"] + " "*(22-len(objects["name"])) + "|  " + "[" +
+            str(objects["cost"]) + " gold]" + " "*(5-len(str(objects["cost"]))) + "|  " + items.getItemUsage(objects)
+        )
+
         if idx == 0:
             output += "  [" + str(idx+1) + "] Purchase "
-            
+
         elif idx == 3:
             output += " [" + str(idx+1) + "] Purchase "
-            
+
         else:
             output += " | [" + str(idx+1) + "] Purchase "
-            
+
         output += TheShopkeep["wares"][idx]["name"]
-        
+
         if idx == 2:
             output += "\n   "
-    
+
     output += " | [E]nd conversation\n\n    I want to: "
-    
+
+    print(" "*tableCentering + "-"*cellLength + "\n")
+
     selected = input(output)
-    
+
     for idx, item in enumerate(TheShopkeep["wares"]):
         if selected == str(idx+1):
             player.purchaseItem(TheShopkeep["wares"][idx])
             goodSelect = True
-    
+
     if goodSelect == False:
         if selected == "e":
             conversing = False
             return [shopping, conversing]
         else:
             input("  Invalid selection...")
-    
+
     return [shopping, conversing]
-        
-    
+
+
 def talkToShaymus():
-    selected = 0
     conversing = True
-    heroTalking = "\n  " + player.TheHero["name"] + ": " 
+    heroTalking = "\n  " + player.TheHero["name"] + ": "
     shaymusTalking = "\n  Shaymus: "
     tools.clear()
-    
-    selected = input("\n" *3 + shaymusTalking + "Well hello there laddy!").lower()
-    
+
+    input("\n" * 3 + shaymusTalking + "Well hello there laddy!").lower()
+
     while conversing:
-        selected = input(
-            "\n  [1] Comment on his height"+
-            " | [E]nd conversation\n    Say: "
-        )
-        
-        # selected = verification(selected, 2)
-        
+
+        tools.printIndent("\n  [1] Comment on his height",numNewLinesAfter=0)
+
+        if Shaymus["gift"] is True:
+            print(" | [2] Ask about the map poking out of his shirt",end="")
+
+        print(" | [E]nd conversation\n    Say: ",end="")
+
+        selected = input().lower()
+
         if selected == "1":
             dialogue(heroTalking, "You're tall for a leprechaun.")
-            
+
             dialogue(shaymusTalking, "I'LL PUT YA IN THE CUBBARD.")
-            
+
+        elif selected == "2" and Shaymus["gift"] is True:
+            dialogue(heroTalking, "I was wondering if I could have that map if you wouldn't mind?")
+
+            dialogue(shaymusTalking, "That'll be 100 gold pieces if you're so interested!")
+
+            selected = input(
+                "\n  [1] Purchase the map for 100 gold coins" +
+                " | [2] Deny the purchase\n    I Want to: "
+            )
+
+            if selected == "1":
+                if player.TheHero["inventory"]["gold"] >= 100:
+                    player.purchaseItem(items.sunkenCitadelMap)
+                    Shaymus["gift"] = False
+                else:
+                    dialogue(shaymusTalking, "Oi! I said the price was 100 gold coins! If ya don't got the coin, stop wasting my time!")
+
+            elif selected == "2":
+                dialogue(shaymusTalking, "Well then stop wasting my time, would yee?!")
+
         elif selected == "e":
             conversing = False
-            
+
             dialogue(heroTalking, "Farewell.")
-            
+
             dialogue(shaymusTalking, "Oi!")
 
         else:
             input("  Invalid selection...")
-            
+
         tools.clear()
-        print("\n" *3 + shaymusTalking + "Well hello there laddy!")
+        print("\n" * 3 + shaymusTalking + "Well hello there laddy!")
 
 def talkToTheShadowMan():
-    selected = 0
     conversing = True
-    heroTalking = "\n  " + player.TheHero["name"] + ": " 
-    shadowManTalking = "\n  The Shadow Man: "
+    heroTalking = "\n  " + player.TheHero["name"] + ": "
+    shadowManTalking = "\n  " + TheShadowMan["name"] + ": "
     tools.clear()
-    
-    input("\n" *3 + shadowManTalking + "Yes, what would you ask of me?")
-    
+
+    print("\n" * 3 + shadowManTalking + "Yes, what would you ask of me?")
+
     while conversing:
         selected = input(
-            "\n  [1] Ask about his name"+
-            " | [2] Ask about The Deep"+
-            " | [3] Ask about his strange weapon"+
+            "\n  [1] Ask about his name" +
+            " | [2] Ask about The Deep" +
+            " | [3] Ask about his strange weapon" +
             " | [E]nd conversation\n    Say: "
         ).lower()
-        
+
         # selected = verification(selected, 4)
-        
-        if  selected == "1":
+
+        if selected == "1":
             dialogue(heroTalking, "Why do they call you the Shadow Man?")
-            
+
             dialogue(shadowManTalking, "I could explain that to you, but you would not understand it.")
-            
+
             dialogue(heroTalking, "Wow.. well that's ominous")
-        
+
         elif selected == "3":
             dialogue(heroTalking, "Hey cool weapon.")
-            
+
             dialogue(shadowManTalking, "Uh, thanks.")
-            
+
             dialogue(heroTalking, "You're welcome!")
-        
+
         elif selected == "e":
             conversing = False
-            
+
             dialogue(heroTalking, "Farewell.")
-            
+
             dialogue(shadowManTalking, "Until next time, traveler.")
-        
+
         elif selected == "2":
             dialogue(heroTalking, "Tell about The Deep?")
-            
+
             dialogue(
                 shadowManTalking, "Ahh yes, The Deep. It is the harrowing abyss. The endless peril of The Lost.\n",
                 "It is a place of nightmares. A place of no return...\""
             )
-            
+
             selected = input(
-                "\n  [1] Express fear"+
-                " | [2] Express interest"+
+                "\n  [1] Express fear" +
+                " | [2] Express interest" +
                 " | [3] Ask about The Lost\n    Say: "
             )
-            
+
             selected = verification(selected, 3)
-            
+
             if int(selected) == 1:
                 dialogue(heroTalking, "I think I'll stay away...")
-                
+
                 dialogue(shadowManTalking, "A wise decision indeed.")
-                
+
             if int(selected) == 2:
                 dialogue(heroTalking, "Well now I have to check it out...")
-                
-                dialogue(shadowManTalking, "A foolish sentiment to be sure. But if that is your decision, at least take this with you.")
-                
-                
+
+                if TheShadowMan["gift"] is True:
+                    dialogue(shadowManTalking, "A foolish sentiment to be sure. But if that is your decision, at least take this with you.")
+                    TheShadowMan["gift"] = False
+                    player.expoundAcquiredItem(items.potionOfAscendance, " " * 4)
+
+                else:
+                    dialogue(shadowManTalking, "A foolish sentiment to be sure. But I won't try to convince you otherwise.")
+
             if int(selected) == 3:
                 dialogue(heroTalking, "You mentioned The Lost? Who are they? Can you tell me about them?")
-                
+
                 dialogue(
                     shadowManTalking, "Not they. Not them. Not him or her. The Lost is a presence older than time.\n",
                     "A magnificent creation hastily abondoned, though not without reason. Without shape or form.\n",
                     "You would be wise to banish the name from your mind."
                 )
-                
+
                 dialogue(heroTalking, "Um, I see... Forget I asked.")
         else:
             input("  Invalid selection...")
-            
+
         tools.clear()
-        print("\n" *3 + shadowManTalking + "Yes, what would you ask of me?")
+        print("\n" * 3 + shadowManTalking + "Yes, what would you ask of me?")
 
 def verification(selected, options):
     try:
@@ -277,13 +308,13 @@ def verification(selected, options):
         selected = 0
         if selected <= 0 or selected > options:
             input("  Invalid selection...")
-            
+
     return selected
 
 def dialogue(speaker, *speech):
     count = 0
     # thing = " "*(len(speaker)+1)
-    
+
     finishedText = speaker
     finishedText += "\""
     for x in speech:
@@ -293,8 +324,6 @@ def dialogue(speaker, *speech):
             finishedText += " "*(len(speaker)+count)
             finishedText += x
         count += 1
-        
-    finishedText += ("\"")
+
+    finishedText += "\""
     input(finishedText)
-
-
